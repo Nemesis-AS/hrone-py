@@ -1,26 +1,26 @@
-# Candidate kit
+# Employee Attendance & Analytics API
 
-Read in this order:
+FastAPI + MongoDB service for the HROne assignment. Everything lives in `app/main.py`.
 
-1. `PROBLEM_STATEMENT.docx`: what you are asked to do, how it is evaluated.
-2. `openapi.yaml`: the API contract and the business rules (R1 - R10).
-3. `DATA_MODEL.md`: what is stored in MongoDB, with nine sample documents.
-4. `app/main.py`: the starter. Put **all** your code in this one file. It must start with `uvicorn app.main:app --port 8000`.
-5. `REVIEW.md`, `DECISIONS.md`: templates to fill in.
+## Running it
 
-`sample_data/` holds the nine sample documents as MongoDB Extended JSON; `sample_seed.py` loads them. The grader's dataset is
-much larger and contains cases they do not show.
+Needs Python 3.11+ and MongoDB 6.0+.
 
-## Local setup
 ```bash
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env            # set MONGO_URI / MONGO_DB (local docker: docker run -p 27017:27017 mongo:7)
-python sample_seed.py
-uvicorn app.main:app --port 8000 --reload
+uvicorn app.main:app --port 8000
 ```
-MongoDB **6.0 or newer** is required (the grader uses 7.0). MongoDB Atlas free tier (M0) works.
 
-## Submit
-A public Git repository with `app/main.py`, `requirements.txt`, `REVIEW.md`, `DECISIONS.md` and a short `README.md`.
-No `.env`, no secrets, no Dockerfile.
+Set `MONGO_URI` and `MONGO_DB` in the environment, or in a local `.env` (real env vars win). Indexes are created on startup, so there are no manual steps. To load the sample data, run `python sample_seed.py`.
+
+## Things worth knowing
+
+- The trend range limit counts days inclusively, so 92 days (e.g. Jul 1 to Sep 30) is allowed and 93 is a 422.
+- The 7-day moving average is the mean of the rounded daily rates, the same numbers the response shows.
+- A punch-out earlier than the employee's open punch-in is a 422, not a 404.
+- MongoDB's `$round` rounds halves to even, so half-up rounding in the pipelines is done with integer arithmetic instead.
+- Concurrent corrections to the same record use an optimistic check on the history length; the slower request gets a 409 and can retry.
+
+See `REVIEW.md` for the starter fixes and `DECISIONS.md` for design choices.
