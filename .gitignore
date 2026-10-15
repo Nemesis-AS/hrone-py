@@ -1,0 +1,6 @@
+.venv
+.env*
+DATA_MODEL.md
+__pycache__/
+sample_data/
+sample_seed.py
